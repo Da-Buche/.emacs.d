@@ -1,6 +1,7 @@
-# .emacs.d
+# .emacs.d - Personal emacs settings
 # Aurélien Buchet - au.buchet@gmail.com
 
-Personal emacs settings
-loaded in "~/.emacs" with the following command line:
-(load "~/.emacs.d/load.el")
+loaded in ".emacs" with the following command line:
+```javascript
+(load ".emacs.d/load.el")
+```
