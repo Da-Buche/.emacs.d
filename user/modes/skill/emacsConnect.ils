@@ -1,0 +1,45 @@
+;; Script to etablish connection between virtuoso and emacs
+;; 
+;; A. Buchet
+
+(defun emacs nil
+  (hiStartLog "/home/buchetau/SKILL/skill.log")
+  (ipcBeginProcess 
+    "emacs /home/buchetau/SKILL/dummy.il" ""
+    EMCdataHandler
+    EMCerrorHandler
+    EMCendHandler
+    "/home/buchetau/SKILL/emacs.log"
+  );ipcBeginProcess
+)
+
+;; =================================================================================
+;; Creating handlers to run commands from emacs
+;; =================================================================================
+
+(defun EMCdataHandler (@rest args)
+  ;; Loading file or using Lint on it if emacs asks
+  ;; otherwise displays a warning and emacs data
+  (errsetstring (cadr args) t);mieux que evalstring car il pertmet d'afficher les erreurs
+)
+
+(defun EMCerrorHandler (@rest args)
+  ;; Displays an error
+  (error "Emacs sent an error")
+  (println args)
+)
+
+(defun EMCendHandler (@rest args)
+  ;; Displays when emacs ends
+  (warn "Connection with Emacs is terminated")
+  (println (car args))
+  (hiEndLog)
+)
+
+
+
+
+
+
+
+
