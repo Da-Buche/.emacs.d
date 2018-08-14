@@ -1,5 +1,5 @@
 # .emacs.d - Personal emacs settings
-# Aurélien Buchet - au.buchet@gmail.com
+## Aurélien Buchet - au.buchet@gmail.com
 
 loaded in ".emacs" with the following command line:
 ```emacs-lisp
