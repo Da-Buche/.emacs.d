@@ -23,7 +23,7 @@
     ;; symbols
     (cons "\'[a-zA-Z_\-]*\\>" ''user-symbol-face)
     ;; variables
-    (cons "[&\?][a-zA-Z_\-]*\\>" ''user-variable-face)
+    (cons "[:&\?][a-zA-Z_\-]*\\>" ''user-variable-face)
     ;; keywords (and prefixes)
     (cons (concat "\\<" (regexp-opt '("t" "nil" "()") t) "\\>") ''user-keyword-face)
   );list

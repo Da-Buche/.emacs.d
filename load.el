@@ -1,7 +1,7 @@
-;; Loading user settings
+;; Loading recursively all files from the current directory
 
 (let
-    ((l-files '("~/.emacs.d/user"))
+    ((l-files (cons (concat emacs-settings-root "/user") nil))
      t-file
      );def
   (while

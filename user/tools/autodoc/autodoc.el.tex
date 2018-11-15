@@ -1,0 +1,38 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{minted}
+\usepackage{hyperref}
+
+hypersetup{
+ backref=true, %permet d'ajouter des liens dans...
+ pagebackref=true,%...les bibliographies
+ hyperindex=true, %ajoute des liens dans les index.
+ colorlinks=true, %colorise les liens
+ urlcolor=black,
+ linkcolor=black,
+ breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+ bookmarks=false, %créé des signets pour Acrobat
+ bookmarksopen=false, %si les signets Acrobat sont créés,
+ % les afficher complètement.
+ pdftitle={autodoc}, %informations apparaissant dans
+ pdfauthor={Autodoc generated document}, %dans les informations du document
+ pdfsubject={Documentation} %sous Acrobat.
+}
+
+\geometry{hmargin=1.5cm,vmargin=3cm}
+\setlength{\topmargin}{-30pt}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\renewcommand{headrulewidth}{1pt}
+\lhead{autodoc}
+\chead{September 2018} 
+\rhead{\includegraphics[height=15mm]{}}
+\renewcommand{ootrulewidth}{1pt}
+\lfoot{leftmark}
+\cfoot{}
+\rfoot{	hepage/ pageref{LastPage}}

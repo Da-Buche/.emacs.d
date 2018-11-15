@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{p}{(}\PYG{n+nb}{defun} \PYG{n+nv}{mafonction} \PYG{n+no}{nil}\PYG{p}{)}
+\PYG{n+nv}{=\PYGZgt{}} \PYG{n+no}{nil}
+\PYG{l+s}{\PYGZdq{}Function to print YOLO\PYGZdq{}}
+\end{Verbatim}

@@ -14,6 +14,9 @@
 ;; Maximizing Emacs Window
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
+;; latex default pdf
+;(setq TeX-PDF-mode t)
+
 ;; saving windows
 (desktop-save-mode 1)
 
@@ -39,7 +42,7 @@
 
 ;; Kill all special buffers
 (defun kill-buffers ()
-  "Killing the current buffer and all the special ones (returns to one window display)"
+  "Killing the current buffer and all the special ones (returns to two window display)"
   (interactive)
   ;; kill the current buffer
   (kill-buffer)
@@ -53,6 +56,7 @@
     )
     ;;displaying only the current window
     (delete-other-windows)
+    (split-window-right)
   );let
 );defun
 
