@@ -1,0 +1,9 @@
+\nonumsubsubsection{@name}
+
+@doc
+
+\begin{minted}{emacs-lisp}
+(defun @name  (@args) ...)
+=> @outs
+\end{minted}
+
