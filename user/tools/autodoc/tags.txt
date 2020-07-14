@@ -11,28 +11,69 @@ In the project header:
 @authors
 @contact
 
+
 In a file header:
+
 @file
 @doc
 @mainFun
 
+
 In a function header:
 
-@fun
-@arg
-  @@name
-  @@type
-  @@doc
-  @@def
-@out
-  @@name
-  @@type
-  @@doc
-@doc
+  @fun
+  @doc
+  @example
+  
+    @arg
+    @type
+    @doc
+    @def
+  
+    @out
+    @type
+    @doc
+
+
+In a macro header:
+
+  @macro
+  @doc
+  @example
+  
+    @arg
+    @type
+    @doc
+    @def
+  
+    @out
+    @type
+    @doc
+
+
+In a class header:
+
+  @class
+  @doc
+    @field
+    @type
+    @doc
+
 
 In a method header:
 
-
+  @method
+  @doc
+  @example
+  
+    @arg
+    @type
+    @doc
+    @def
+  
+    @out
+    @type
+    @doc
 
 
 

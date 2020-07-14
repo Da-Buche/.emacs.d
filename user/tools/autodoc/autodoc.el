@@ -1,156 +1,665 @@
-;; =================================================================================
-;; @project Autodoc
-;; 
-;; @acronym AUTODOC
-;; 
-;; @summary Emacs Lisp tool to generate documentation automatically
-;; 
-;; @abstract autodoc is an open source documentation generator using emacs-lisp to generate a .tex documentation file and can print it as a .pdf file using pdftex. autodoc is fully configurable and can be used with many languages and many templates.
-;; 
-;; @date 30 August 2018
-;; 
-;; @authors A. Buchet
-;; 
-;; @contact au.buchet@gmail.com
-;; =================================================================================
-
-;; =================================================================================
+;; =============================================================================================================
 ;; @file autodoc.el
 ;; 
 ;; @doc This File contains all the functions and scripts in order to generate the latex template and the pdf from a file
-;; =================================================================================
+;; 
+;; @author Aurélien BUCHET
+;; =============================================================================================================
 
-;; ------------------------------------------------------------
-;; @fun read-lines
+;; =============================================================================================================
+;; Reading lines, comments and tags
+;; =============================================================================================================
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADreadLines
 ;; 
 ;; @doc Return a list of lines of the file described by filePath
 ;; 
 ;; @arg filePath
-;; @@type string
-;; @@doc String containing the path of the file
+;; @type string
+;; @doc String containing the path of the file
 ;; 
 ;; @out 
-;; @@type list 
-;; ------------------------------------------------------------
-(defun read-lines (filePath)
-  ;; copied the 6 september 2018
-  ;; from http://ergoemacs.org/emacs/elisp_read_file_content.html
-  "Return a list of lines of a file at filePath."
+;; @type list 
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADreadLines (filePath)
   (with-temp-buffer
     (insert-file-contents filePath)
-    (split-string (buffer-string) "\n" t)))
+    (split-string (buffer-string) "\n" nil)))
 
-;; ------------------------------------------------------------
-;; @fun commentp
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADcommentp
 ;; 
 ;; @doc Return t if object is a string describing a comment
 ;; 
 ;; @arg object
-;; @@type any
-;; @@doc Object to check
+;; @type any
+;; @doc Object to check
 ;; 
 ;; @out
-;; @@type boolean
-;; ------------------------------------------------------------
+;; @type boolean
+;; -------------------------------------------------------------------------------------------------------------
 ;; Need to change this function so it can be used with any language
-(defun commentp (object)
-  (and (stringp object) (equal (substring object 0 1) ";")))
+(defun ADcommentp (object)
+  (and (stringp object) (> (length object) 0) (equal (substring object 0 1) ";")))
 
-;; =================================================================================
-;; Functions to manipulate plists
-;; =================================================================================
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADreadCommentLines
+;;
+;; @doc Retunrs the list of comment lines of the file described by filePath
+;; 
+;; @arg filePath
+;; @type string
+;; @doc String containing the path of the file
+;; 
+;; @out 
+;; @type list 
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADreadCommentLines (filePath)
+  (remove nil (mapcar (lambda (line) (when (ADcommentp line) line)) (ADreadLines filePath))))
 
-(defun plist-val (
-    plist ;property list ;property list from which the property defined by args will be extracted if it exists
-    &rest args ;symbol list ;can contain an unlimited number of symbols describing a property to extract in property list hierarchy
-  )
-  "Allows the use of plist-get with multiple arguments"
-  (let ((plist plist))
-    (while args
-      (setq plist (plist-get plist (pop args)))
-    )
-    plist))
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADemptyCommentp
+;;
+;; @doc Return t if the given string describes an empty comment line
+;;
+;; @arg line
+;; @type string
+;; @doc The string to check wether it is an empty comment
+;;
+;; @out 
+;; @type boolean
+;; @doc t if the string describes an empty comment, nil otherwise
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADemptyCommentp (line) (string-match "^;+\s*$" line))
 
-;; #example
-;; (setq plist (list 'name "property list" 'properties '(a "prop a" b "prop b")))
-;; (plist-val plist 'name)
-;; => "property list"
-;; (plist-val plist 'properties)
-;; => (a "prop a" b "prop b")
-;; (plist-val plist 'properties 'a)
-;; => "prop a"
-;; #
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADseparatorCommentp
+;;
+;; @doc Return t if the givent string describes a separator comment line
+;; (A separator comment line starts with ;; and is composed of spaces then only - or =)
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADseparatorCommentp (line) (string-match "^;+ *[=-]+$" line))
 
-(defmacro check-string (symbol)
-  "Checks if symbol is bound to a string and if it's not associates "" to the symbol"
-  `(if (and (boundp ',symbol) ,symbol (stringp ,symbol))
-    ,symbol (setq ,symbol "")))
 
-(defun functionToTexString (function)
-  "Takes a plist describing a function in argument and return the minted latex code to print it properly"
-  (let ((name    (plist-get function 'name))
-      (arguments (plist-get function 'arguments)) args
-      (doc       (plist-get function 'doc))
-      (outputs   (plist-get function 'outputs)) outs
-    )
-    ;; checking if function uses arguments or nil
-    (if arguments
-      ;; function has arguments
-      (setq args
-        ;; concatening arguments name with spaces between them
-        (mapconcat '(lambda (argument) (plist-get argument 'name))
-          arguments " "))
-      ;; function has no arguments
-      (setq args "nil"))
-    ;; checking if function has outputs
-    (if outputs
-      ;; function has outputs
-      (setq outs
-        ;; concatening arguments name with spaces between them
-        (mapconcat' (lambda (output) (plist-get output 'name))
-          outputs " "))
-      ;; function has no outputs
-      (setq outs "nil"))
-    ;; creating the latex string to insert
-    (concat
-      "\\nonumsubsubsection{" name "}\n"
-      doc "\n"
-      "\\begin{minted}{emacs-lisp}\n"
-      "(defun " name " (" args ") ... )\n"
-      "=> " outs "\n"
-      "\\end{minted}\n\n")
-    ;(concat "\\function{" name "}{" args "}{" outs "}{" doc "}\n")
-  );let
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADextractComment
+;;
+;; @doc Retuns the substring placed after the comment marker in the given string
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADextractComment (line)
+  (let ((comment ""))
+    (dolist (word (split-string line "[; ]" t))
+      (setq comment (concat comment word " ")))
+    (ADescapeString comment));let
 );defun
 
-;(functionToTexString function)
-
-(defun fileToTexString (file)
-  "Takes a plist describing a file in argument and returns the corresponding latex code ready to be inserted in a documentation file"
-  (let ((name     (plist-get file 'name))
-       (functions (plist-get file 'functions))
-       (doc       (plist-get file 'doc))
-       (res ""))
-     ;; creating the latex string to insert
-     (setq res (concat res "\\file{" name "}{" doc "}\n\n"))
-     ;; printing each function
-     (dolist (function functions)
-       (setq res (concat res (functionToTexString function))))
-     (concat res "\\newpage\n\n")
-  );let
-);defun
-
-;(fileToTexString file)
-
-(defun filesToTexString (files)
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADescapeUnderscores
+;;
+;; @doc place \_ instead of _ in a string
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADescapeUnderscores (str)
   (let ((res ""))
-    (dolist (file files)
-      (setq res (concat res (fileToTexString file))))
-    res
+    (dolist (sbstr (split-string str "_")) (setq res (concat res "\\_" sbstr)))
+    (substring res 2));let
+);defun
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADescapeDollars
+;;
+;; @doc place \$ instead of $ in a string
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADescapeDollars (str)
+  (let ((res ""))
+    (dolist (sbstr (split-string str "\\$")) (setq res (concat res "\\$" sbstr)))
+    (substring res 2));let
+);defun
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADescapeString
+;;
+;; @doc Escape all the special characters in a string
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADescapeString (str)
+  (ADescapeDollars (ADescapeUnderscores str)))
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADgetTag
+;;
+;; @doc Returns the tag of a line if it contains one, nil otherwise
+;;
+;; @arg line
+;; @type string
+;; @doc The string of a line in a file
+;;
+;; @out tag
+;; @type string/nil
+;; @doc The fetched tag or nil if any was found
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADgetTag (line)
+  (when (string-match-p " @.*" line)
+    (car (split-string line "[; @]+" t))))
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADgetTagValue
+;;
+;; @doc Retuns the substring placed after the given tag in the given string
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADgetTagValue (line tag) 
+  (ADescapeString (substring line (+ (string-match-p (concat "@" tag) line) (length tag) 1))))
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADnextTag
+;;
+;; @doc Browse comment lines until the next tag, returns nil if all lines are browsed without fetching any tag
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADnextTag (lines)
+  (let (line tag)
+    (while (and (not tag) (setq line (pop lines)))
+      (setq tag (ADgetTag line)))
+    ;; Returning the tag and the remaining lines
+    (when tag (list tag (cons line lines)))
   );let
 );defun
 
-(defun generateTemplate (directory file plist)
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADgetCurrentTag
+;;
+;; @doc This function is used from a line containing a tag to get all of its content
+;; (stops on a new tag, a separator or a non comment line)
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADgetCurrentTag (lines)
+  ;; This function is used from a line containing a tag to get all of its content
+  ;; stops on a new tag, a separator or a non comment line
+  (let (tag value
+      (line (pop lines))
+      newTag)
+    ;; tag and value initialisation
+    (setq tag (ADgetTag line))
+    (setq value (ADgetTagValue line tag))
+    ;; Browsing lines until the next tag, separator or non comment line
+    (while (and (setq line (pop lines))
+        (ADcommentp line)
+        (not (ADseparatorCommentp line))
+        (not (setq newTag (ADgetTag line))))
+      (setq value (concat value "\n" (ADextractComment line)))
+    );while
+    ;; Removing '\n' and ' ' at the beginning of value
+    (while (and (> (length value) 0) (member (substring value 0 1) '(" " "\n"))) (setq value (substring value 1)))
+    ;; Removing '\n' at the end of value
+    (while (and (> (length value) 0) (equal (substring value (- (length value) 1)) "\n"))
+      (setq value (substring value 0 (- (length value) 1))))
+    (list tag value newTag (when line (cons line lines)))
+  );let
+);defun
+
+;; =============================================================================================================
+;; Constructing property lists
+;; =============================================================================================================
+
+(defun ADconstructArgumentDPL (lines)
+  ;; Returns the DPL of an argument header and the remaining lines after it
+  (let (res tag value newTag DPL)
+    ;; Getting current tag which should be @arg
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @arg
+    (unless (equal tag "arg") (error "ADconstructArgumentDPL: used while current tag is not @arg"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if its an output tag
+    (while (and newTag (member newTag '("type" "kind" "doc" "def")))
+      ;; new tag is ok putting its value in the DPL
+      (setq res (ADgetCurrentTag lines)
+        tag    (pop res)
+        value  (pop res)
+        newTag (pop res)
+        lines  (pop res))
+      (plist-push DPL tag value)
+    );while
+    ;; Returning the DPL
+    (list DPL newTag lines)
+  );let
+);defun
+
+(defun ADconstructOutputDPL (lines)
+  ;; Returns the DPL of an output header and the remaining lines after it
+  (let (res tag value newTag DPL)
+    ;; Getting current tag which should be @out
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @arg
+    (unless (equal tag "out") (error "ADconstructOutputDPL: used while current tag is not @out"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if it is an output tag
+    (while (and newTag (member newTag '("type" "doc")))
+      ;; new tag is ok putting its value in the DPL
+      (setq res (ADgetCurrentTag lines)
+        tag    (pop res)
+        value  (pop res)
+        newTag (pop res)
+        lines  (pop res))
+      (plist-push DPL tag value)
+    );while
+    ;; Returning the DPL
+    (list DPL newTag lines)
+  );let
+);defun
+
+(defun ADconstructFunctionDPL (lines)
+  ;; Returns the DPL of a function header and the remaining lines after it
+  (let (arguments outputs subDPL
+      res tag value newTag DPL)
+    ;; Getting current tag which should be @fun
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @fun
+    (unless (equal tag "fun") (error "ADconstructFunctionDPL: used while current tag is not @fun"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if it is a function tag
+    (while (and newTag (member newTag '("doc" "example" "arg" "out")))
+      (case (symcat newTag)
+        ;; new tag is an argument constructing its DPL and placing it in arguments list
+        ('arg (setq res (ADconstructArgumentDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL arguments))
+        ;; new tag is an output constructing its DPL and placing it in outputs list
+        ('out (setq res (ADconstructOutputDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL outputs))
+        ;; new tag is a classic tag putting its value in the DPL
+        (t (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (plist-push DPL tag value))
+      );case newTag
+    );while
+    ;; Pushing arguments and outputs in the generated DPL
+    (plist-push DPL 'arguments arguments)
+    (plist-push DPL 'outputs outputs)
+    ;; Returning the DPL
+    (list DPL lines)
+  );let
+);defun
+
+(defun ADconstructMacroDPL (lines)
+  ;; Returns the DPL of a macro header and the remaining lines after it
+  (let (arguments outputs subDPL
+      res tag value newTag DPL)
+    ;; Getting current tag which should be @macro
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @macro
+    (unless (equal tag "macro") (error "ADconstructMacroDPL: used while current tag is not @macro"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if it is a macro tag
+    (while (and newTag (member newTag '("doc" "example" "arg" "out")))
+      (case (symcat newTag)
+        ;; new tag is an argument constructing its DPL and placing it in arguments list
+        ('arg (setq res (ADconstructArgumentDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL arguments))
+        ;; new tag is an output constructing its DPL and placing it in outputs list
+        ('out (setq res (ADconstructOutputDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL outputs))
+        ;; new tag is a classic tag putting its value in the DPL
+        (t (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (plist-push DPL tag value))
+      );case newTag
+    );while
+    ;; Pushing arguments and outputs in the generated DPL
+    (plist-push DPL 'arguments arguments)
+    (plist-push DPL 'outputs outputs)
+    ;; Returning the DPL
+    (list DPL lines)
+  );let
+);defun
+
+(defun ADconstructMethodDPL (lines)
+  ;; Returns the DPL of a method header and the remaining lines after it
+  (let (arguments outputs subDPL
+      res tag value newTag DPL)
+    ;; Getting current tag which should be @method
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @method
+    (unless (equal tag "method") (error "ADconstructMethodDPL: used while current tag is not @method"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if it is a method tag
+    (while (and newTag (member newTag '("doc" "example" "arg" "out")))
+      (case (symcat newTag)
+        ;; new tag is an argument constructing its DPL and placing it in arguments list
+        ('arg (setq res (ADconstructArgumentDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL arguments))
+        ;; new tag is an output constructing its DPL and placing it in outputs list
+        ('out (setq res (ADconstructOutputDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL outputs))
+        ;; new tag is a classic tag putting its value in the DPL
+        (t (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (plist-push DPL tag value))
+      );case newTag
+    );while
+    ;; Pushing arguments and outputs in the generated DPL
+    (plist-push DPL 'arguments arguments)
+    (plist-push DPL 'outputs outputs)
+    ;; Returning the DPL
+    (list DPL lines)
+  );let
+);defun
+
+(defun ADconstructFieldDPL (lines)
+  ;; Returns the DPL of an field header and the remaining lines after it
+  (let (res tag value newTag DPL)
+    ;; Getting current tag which should be @field
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @field
+    (unless (equal tag "field") (error "ADconstructFieldDPL: used while current tag is not @field"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if its an output tag
+    (while (and newTag (member newTag '("type" "doc")))
+      ;; new tag is ok putting its value in the DPL
+      (setq res (ADgetCurrentTag lines)
+        tag    (pop res)
+        value  (pop res)
+        newTag (pop res)
+        lines  (pop res))
+      (plist-push DPL tag value)
+    );while
+    ;; Returning the DPL
+    (list DPL newTag lines)
+  );let
+);defun
+
+(defun ADconstructClassDPL (lines)
+  ;; Returns the DPL of a class header and the remaining lines after it
+  (let (fields subDPL
+      res tag value newTag DPL)
+    ;; Getting current tag which should be @class
+    (setq res (ADgetCurrentTag lines)
+      tag    (pop res)
+      value  (pop res)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking that current tag is @class
+    (unless (equal tag "class") (error "ADconstructClassDPL: used while current tag is not @class"))
+    (plist-push DPL "name" value)
+    ;; Checking if a new tag was fetched and if it is a class tag
+    (while (and newTag (member newTag '("doc" "field")))
+      ;; Case on newTag
+      (case (symcat newTag)
+        ;; Field
+        ('field (setq res (ADconstructFieldDPL lines)
+            subDPL (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (push subDPL fields))
+        ;; new tag is a classic tag putting its value in the DPL
+        (t (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (plist-push DPL tag value))
+      );case newTag
+    );while
+    ;; Pushing fields and outputs in the generated DPL
+    (plist-push DPL 'fields  fields)
+    ;; Returning the DPL
+    (list DPL lines)
+  );let
+);defun
+
+(defun ADconstructFileDPL (filePath)
+  (let ((lines (ADreadCommentLines filePath))
+      functions macros classes methods
+      res tag value newTag 
+      subDPL DPL)
+    ;; Going to the nextTag
+    (setq res (ADnextTag lines)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking if a new tag was fetched and if it is a file tag
+    (while (and newTag (member newTag '("file" "doc" "author" "main" "fun" "macro" "class" "method")))
+      ;; Case on newTag
+      (case (symcat newTag)
+        ;; fileName
+        ('file (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines (pop res))
+          (plist-push DPL 'name value))
+        ;; Function
+        ('fun (setq res (ADconstructFunctionDPL lines)
+            subDPL (pop res)
+            lines  (pop res))          
+          (push subDPL functions))
+        ;; Macro
+        ('macro (setq res (ADconstructMacroDPL lines)
+            subDPL (pop res)
+            lines  (pop res))
+          (push subDPL macros))
+        ;; Class
+        ('class (setq res (ADconstructClassDPL lines)
+            subDPL (pop res)
+            lines  (pop res))
+          (push subDPL classes))
+        ;; Method
+        ('method (setq res (ADconstructMethodDPL lines)
+            subDPL (pop res)
+            lines  (pop res))
+          (push subDPL methods))
+        ;; new tag is a classic tag putting its value in the DPL
+        (t (setq res (ADgetCurrentTag lines)
+            tag    (pop res)
+            value  (pop res)
+            newTag (pop res)
+            lines  (pop res))
+          (plist-push DPL tag value))
+      );case newTag
+      ;; Fetching next tag
+      (setq res (ADnextTag lines)
+        newTag (pop res)
+        lines  (pop res))
+    );while
+    ;; Pushing functions, macros, classes and methods in the generated DPL
+    (plist-push DPL 'functions (nreverse functions))
+    (plist-push DPL 'macros    (nreverse macros))
+    (plist-push DPL 'classes   (nreverse classes))
+    (plist-push DPL 'methods   (nreverse methods))
+    ;; Returning the DPL
+    DPL
+  );let
+);defun
+
+(defun ADconstructProjectDPL (filePath)
+  (let ((lines (ADreadCommentLines filePath))
+      res tag value newTag DPL
+    files)
+    ;; Going to the nextTag
+    (setq res (ADnextTag lines)
+      newTag (pop res)
+      lines  (pop res))
+    ;; Checking if a new tag was fetched
+    (while newTag
+      (setq globalLines lines)
+
+      (setq res (ADgetCurrentTag lines)
+        tag    (pop res)
+        value  (pop res)
+        newTag (pop res)
+        lines  (pop res))
+      (plist-push DPL (if (equal tag "project") "name" tag) value)
+      ;; Fetching next tag
+      (setq res (ADnextTag lines)
+        newTag (pop res)
+        lines (pop res))
+    );while
+    ;; Browsing files to generate subDPLs
+    (dolist (filePath (split-string (plist-val DPL 'files) "[ \n]" t))
+      (push (ADconstructFileDPL filePath) files))
+    (plist-push DPL 'files files)
+  );let
+);defun
+
+;; ============================================================================================================
+;; Browsing DPL to generate/fill tex file
+;; ============================================================================================================
+
+(defun ADreplace (tag value)
+  ;; Finds the tag in current buffer and replaces it with the given value
+  (save-excursion
+    (beginning-of-buffer)
+    (when (search-forward-regexp (strcat "@" tag) nil t)
+      (replace-match value t t))))
+
+(defun ADargumentDPLtoTexString (argument)
+  (let (
+      (kind (plist-val argument 'kind))
+      (def  (plist-val argument 'def))
+      (doc  (plist-val argument 'doc))
+      (type (plist-val argument 'type))
+    )
+    (strcat "\n\\vspace{3mm}\n"
+      ;; Argument name
+      "\\begin{minipage}[t]{.25\\linewidth}\n"
+      " {\\ttfamily " (if kind (strcat "@" kind " ") "") (if (equal kind "key") "?" "") (plist-val argument 'name) " }\n"
+      "\\end{minipage}\n"
+      ;; Argument docstring, type and default value on the right
+      "\\begin{minipage}[t]{.75\\linewidth}\n"
+      (if doc doc "") "\\vspace{1mm}\n"
+      (if type (strcat "\\\\ -~type:    \\hspace{14mm plus 1cm minus 1cm} {\\ttfamily " type "}\\hfill\n") "")
+      (if def  (strcat "\\\\ -~default: \\hspace{1cm plus 1cm minus 1cm} {\\ttfamily " def "}\\hfill\n") "")
+      "\\end{minipage}\n\n"
+    );strcat
+  );let
+);defun
+
+(defun ADfunctionDPLtoTexString (fun)
+  (let ((arguments (plist-val fun 'arguments))
+        (outputs   (plist-val fun 'outputs))
+        (example   (plist-val fun 'example)))
+    (strcat
+      ;; Function name and docstring
+      "\\function{" (plist-val fun 'name) "}{\n\n"
+      ;"\\begin{verbatim}\n\n "
+      (plist-val fun 'doc) "\n\n"
+      ;"\\end{verbatim}\n\n"
+      ;; Function arguments
+      (if arguments
+        (strcat "\n\\vspace{3mm plus 2mm minus 2mm}\n{\\bfseries Arguments}\n\n"
+          (apply 'strcat (mapcar 'ADargumentDPLtoTexString arguments)))
+        "")
+      ;; Function outputs
+      (if outputs
+        (strcat "\n\\vspace{3mm plus 2mm minus 2mm}\n{\\bfseries Returned values}\n\n"
+          (apply 'strcat (mapcar 'ADargumentDPLtoTexString outputs)))
+        "")
+      ;; Example
+      (if example
+        (strcat "\n\\vspace{3mm plus 2mm minus 2mm}\n{\\bfseries Example}\n"
+          "\\begin{verbatim}\n\n"
+          example "\n\n"
+          "\\end{verbatim}\n\n")
+        "")
+      "}\n\n"
+    );strcat
+  );let
+);defun
+
+(defun ADfileDPLtoTexString (file)
+  (let (
+      (doc       (plist-val file 'doc))
+      (functions (plist-val file 'functions))
+      (macros    (plist-val file 'macros))
+      (classes   (plist-val file 'classes))
+      (methods   (plist-val file 'methods))
+    );let definitions
+    (strcat "\\file{" (plist-val file 'name) "}{\n\n"
+      ;; Docstring
+      (if doc (strcat "{\\large " doc " }" "\\\\[3mm]\n\n") "")
+      ;; Printing functions
+      (if functions 
+        (strcat "{\\bfseries \\LARGE Functions}\n\n"
+          (apply 'strcat (mapcar 'ADfunctionDPLtoTexString functions)))
+        "")
+      "}\n\n");strcat
+  );let
+);defun
+
+;; -------------------------------------------------------------------------------------------------------------
+;; @fun ADfillTemplate
+;;
+;; @doc Take a latex template and fill the tags using the DPL of a project
+;; -------------------------------------------------------------------------------------------------------------
+(defun ADfillTemplate (projectPath templatePath outputPath)
+  (let ((DPL (ADconstructProjectDPL projectPath))
+      
+    )
+    ;; Copying the template into the output
+    (with-temp-file outputPath
+      (insert-file-contents-literally templatePath)
+      ;; Replacing project name
+      (ADreplace "project" (plist-val DPL 'name))
+      ;; Replacing project values
+      (dolist (tag '("acronym" "logo" "summary" "abstract" "date" "authors" "contact"))
+        (ADreplace tag (plist-val DPL tag)))
+      ;; Constructing the Tex string describing all the files and functions they contains
+      (ADreplace "files" (apply 'strcat (mapcar 'ADfileDPLtoTexString (plist-val DPL 'files))))
+    );with-temp-file
+  );let
+);defun
+
+;; =============================================================================================================
+;; Obsolete
+;; =============================================================================================================
+
+
+(defun ADgenerateTemplate (directory file plist)
   "Generates a file.tex in directory using the property list"
   (let
     ;; fetching project parameters
@@ -275,7 +784,7 @@
         (if (equal installation "") "" 
           (concat "\\nonumsection{Installation}\n" installation "\n\n"))
         (if (not files) ""
-          (concat "\\nonumsection{Files}\n" (filesToTexString files) "\n"))
+          (concat "\\nonumsection{Files}\n" (DPLfilesToTexString files) "\n"))
         ;; end of document
         "\\end{document}\n")
       ;; saving buffer and killing it
@@ -300,7 +809,7 @@
 
 (defun printPDF (directory file)
   "Print the pdf file using a shell command"
-  ;; Move to directory, print PDF using pdflatex 2 times for references then removes generated files and comes back to initial directory
+  ;; Move to directory, print PDF using pdflatex 2 times for references then removes generated files and come back to initial directory
   (let ((command
          (format
           "CURRENTDIR=\"$(pwd)\" && cd %s && pdflatex -interaction nonstopmode -shell-escape %s && pdflatex -interaction nonstopmode -shell-escape %s ; cd $CURRENTDIR"
@@ -309,42 +818,6 @@
           file file file file)))
     (shell-command command)
     command))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

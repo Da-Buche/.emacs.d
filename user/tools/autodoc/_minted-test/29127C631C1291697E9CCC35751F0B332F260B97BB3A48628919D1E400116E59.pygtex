@@ -1,4 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{p}{(}\PYG{n+nb}{defun} \PYG{n+nv}{printPDF} \PYG{p}{(}\PYG{n+nv}{directory} \PYG{n+nv}{file}\PYG{p}{)} \PYG{o}{...} \PYG{p}{)}
-\PYG{n+nv}{=\PYGZgt{}} \PYG{n+nv}{command}
-\end{Verbatim}

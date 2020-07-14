@@ -14,7 +14,7 @@
 \usepackage{lastpage}
 \usepackage{titlesec}
 \usepackage{hyperref}
-%\usepackage{minted}
+\usepackage{minted}
 
 %% =================================================================================
 %% Creating new commands
@@ -23,6 +23,7 @@
 \newcommand{\project}{@project}
 \renewcommand{\date}{@date}
 \newcommand{\logo}{@logo}
+\addto\captionsenglish{\renewcommand\listfigurename{List of functions}}
 
 \newcommand{\nonumsection}[1]{
 \newpage\paragraph{}\phantomsection
@@ -67,7 +68,7 @@
 \renewcommand{\headrulewidth}{1pt}
 \lhead{\project}
 \chead{\date} 
-\rhead{\includegraphics[height=2cm]{\logo}}
+\rhead{\logo}
 \renewcommand{\footrulewidth}{1pt}
 \lfoot{\leftmark}
 \cfoot{}
@@ -81,7 +82,7 @@
 
 \begin{titlepage}
   \begin{center}
-    \includegraphics[height=8cm]{\logo}\\[1cm]
+    \logo\\[1cm]
     {\Large \bfseries \project}\\[5mm]
     {\large \date}\\[5mm]
     \begin{flushleft} \large @summary \end{flushright}\\[5mm]
@@ -94,11 +95,65 @@
 \end{titlepage}
 
 \newpage\tableofcontents
-\newpage\nonumsection{List of Files}
-\newpage\nonumsection{List of Functions}
 \newpage\nonumsection{Readme}
 \newpage\nonumsection{Prerequisites}
 \newpage\nonumsection{Installation}
+
+\phantomsection
+\addcontentsline{toc}{section}{\listfigurename}
+\newpage\listoffigures\newpage
+
+\begin{minted}{python}
+import numpy as np
+ 
+def incmatrix(genl1,genl2):
+    m = len(genl1)
+    n = len(genl2)
+    M = None #to become the incidence matrix
+    VT = np.zeros((n*m,1), int)  #dummy variable
+ 
+    #compute the bitwise xor matrix
+    M1 = bitxormatrix(genl1)
+    M2 = np.triu(bitxormatrix(genl2),1) 
+ 
+    for i in range(m-1):
+        for j in range(i+1, m):
+            [r,c] = np.where(M2 == M1[i,j])
+            for k in range(len(r)):
+                VT[(i)*n + r[k]] = 1;
+                VT[(i)*n + c[k]] = 1;
+                VT[(j)*n + r[k]] = 1;
+                VT[(j)*n + c[k]] = 1;
+ 
+                if M is None:
+                    M = np.copy(VT)
+                else:
+                    M = np.concatenate((M, VT), 1)
+ 
+                VT = np.zeros((n*m,1), int)
+ 
+    return M
+\end{minted}
+
+\newpage
+
+
+\begin{figure}\caption[mafonction]{}
+  
+\begin{minted}{emacs-lisp}
+(defun mafonction nil)
+=> nil
+"Function to print YOLO"
+\end{minted}
+  
+\end{figure}
+
+
+\mint{emacs-lisp}|(defun mafonction (a b c yolo test abcdefghijklmnopqrst azertyuiop poiuytreza &rest yololo)) => output|
+
+\newpage
+
+test
 
 \end{document}
 
