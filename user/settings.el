@@ -1,9 +1,13 @@
+;; =================================================================================
+;; Personnal emacs setup
+;; =================================================================================
+
 ;; Setting font white and background gray
 (set-face-foreground 'default "linen")
 (set-face-background 'default "gray15")
 
 ;; Setting bold font faces 
-(set-frame-font "DejaVu Sans Mono-10:bold")
+(set-frame-font "DejaVu Sans Mono-10")
 
 ;; Removing Toolbar
 (tool-bar-mode -1)
@@ -16,6 +20,24 @@
 
 ;; latex default pdf
 ;(setq TeX-PDF-mode t)
+(cl-defun latex-custom-print (&key (file   (buffer-file-name))
+                                   (latex  "xelatex")
+                                   (viewer "evince")
+                                 )
+  (interactive)
+  (let ((name (file-name-sans-extension file)))
+    ;; Run latex
+    (shell-command-to-string (format "%s -interaction=nonstopmode %s" latex file)) 
+    ;; Delete untimely generated files
+    (dolist (suffix '("aux" "log" "out")) 
+      (delete-file (concat name "." suffix)))
+    ;; Show file in .pdf viewer
+    ;(shell-command-to-string (format "%s %s.pdf &" viewer name))
+    ));
+
+(add-hook 'latex-mode-hook 
+  (lambda nil
+    (local-set-key (kbd "C-x p") 'latex-custom-print)))
 
 ;; saving windows
 (desktop-save-mode 1)
