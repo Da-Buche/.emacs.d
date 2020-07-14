@@ -1,6 +1,16 @@
-;; =================================================================================
-;; Personnal emacs setup
-;; =================================================================================
+;; =============================================================================================================
+;; Personal Emacs Setup
+;; 
+;; Author: Aurélien Buchet
+;; =============================================================================================================
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(add-to-list 'auto-mode-alist `(,(regexp-opt '(".myalias" ".bash" ".csh" ".tcsh")) . shell-script-mode))
+
+;; =============================================================================================================
+;; Default Font, Face and Background
+;; =============================================================================================================
 
 ;; Setting font white and background gray
 (set-face-foreground 'default "linen")
@@ -9,200 +19,123 @@
 ;; Setting bold font faces 
 (set-frame-font "DejaVu Sans Mono-10")
 
-;; Removing Toolbar
+(defun set-frame-font-size (&optional n)
+  "Set frame font size to N"
+  (interactive "n")
+  (set-frame-font (format "DejaVu Sans Mono-%d" (or n 12)) t))
+
+;; Remove Menu bar, tool bar and scroll bar
+(menu-bar-mode -1)
 (tool-bar-mode -1)
+(toggle-scroll-bar -1)
 
-;; Removing start screen
-(setq inhibit-startup-screen t)
+;; Show line-number
+(global-linum-mode 1)
 
-;; Maximizing Emacs Window
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+;; Display columns by default
+(column-number-mode 1)
 
-;; latex default pdf
-;(setq TeX-PDF-mode t)
-(cl-defun latex-custom-print (&key (file   (buffer-file-name))
-                                   (latex  "xelatex")
-                                   (viewer "evince")
-                                 )
-  (interactive)
-  (let ((name (file-name-sans-extension file)))
-    ;; Run latex
-    (shell-command-to-string (format "%s -interaction=nonstopmode %s" latex file)) 
-    ;; Delete untimely generated files
-    (dolist (suffix '("aux" "log" "out")) 
-      (delete-file (concat name "." suffix)))
-    ;; Show file in .pdf viewer
-    ;(shell-command-to-string (format "%s %s.pdf &" viewer name))
-    ));
+;; Truncate long lines (do no display them on several lines)
+(setq-default truncate-lines t)
 
-(add-hook 'latex-mode-hook 
-  (lambda nil
-    (local-set-key (kbd "C-x p") 'latex-custom-print)))
-
-;; saving windows
-(desktop-save-mode 1)
-
-;; Replacing tabulations with spaces 
+;; Replaces tabulations with spaces 
 (setq-default indent-tabs-mode nil)
+(setq-default x-stretch-cursor t)
 
-;; Enabling auto-revert
+;; Enables auto-revert
 (setq-default global-auto-revert-mode t)
 
-;; When split screens are horizontal
-;(setq-default split-height-threshold 500)
-;(setq-default split-width-threshold 10)
-;(setq-default window-size-fixed nil)
-;(setq-default window-min-height 50)
-;(setq-default window-min-width 2)
+;; Backup in one place. flat, no tree structure
+(setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
+
+;; Replaces cursor when scrolling or using page Up/Down
+(setq scroll-preserve-screen-position 'always)
+
+;; Case insensitive file search
+(setq read-file-name-completion-ignore-case t)
 
 ;; =================================================================================
-;; Creating Global Shortkeys
+;; Existing Modes
 ;; =================================================================================
 
-;; Remove C-x f shortkey
-(global-set-key (kbd "C-x f") 'find-file)
+;; Replace audio bell by visual one
+(setq visible-bell t)
 
-;; Kill all special buffers
-(defun kill-buffers ()
-  "Killing the current buffer and all the special ones (returns to two window display)"
-  (interactive)
-  ;; kill the current buffer
-  (kill-buffer)
-  ;;fetching buffers
-  (let (buffer (buffers (buffer-list)))
-    (while (setq buffer (pop buffers))
-      ;; killing only the special ones with *name*
-      (when (string-match "\*.*\*" (buffer-name buffer))
-        (kill-buffer buffer)
-      )
-    )
-    ;;displaying only the current window
-    (delete-other-windows)
-    (split-window-right)
-  );let
-);defun
-
-(global-set-key (kbd "C-x C-k") 'kill-buffers)
-
-;; Deleting backward and forward
-(defun global-delete-backward ()
-  (interactive)
-  (if (eq (char-before) ?\ )
-    (while (eq (char-before) ?\ )
-      (delete-backward-char 1)
-    )
-    (delete-backward-char 1)
-  );if
-);defun
-
-(defun global-delete-forward ()
-  (interactive)
-  (if (eq (char-after) ?\ )
-    (while (eq (char-after) ?\ )
-      (delete-char 1)
-    )
-    (delete-char 1)
-  );if
-);defun
-
-(global-set-key (kbd "<backspace>") 'global-delete-backward)
-(global-set-key (kbd "C-d") 'global-delete-forward)
-(global-set-key (kbd "<delete>") 'global-delete-forward)
-
-(defun delete-spaces ()
-  "deleting all spaces of the line"  
-  (interactive)
-  (save-excursion
-    (beginning-of-line)
-    (while (not (eolp))
-      (when (eq (char-after) ?\s)
-        (delete-region (point) (+ (point) 1))
-      );when
-      (forward-char)
-    );while
-  );save-excursion
-);defun
-
-;; Inserting comments
-(defun global-insert-comment ()
-  "Insert two ; and a space after"
-  (interactive)
-  (let (beg end)
-    (save-excursion
-      (beginning-of-line)
-      (setq beg (point))
-      (end-of-line)
-      (setq end (point))
-    );save-excursion
-    (if (string-match "^[\s\n]*$" (buffer-substring beg end))
-      (progn
-        (insert (concat comment-start comment-start))
-        (insert " ")
-        (save-excursion
-          (insert comment-end)
-        );save-excursion
-      );progn
-      (insert comment-start)
-    );if
-  );let
-);defun
-
-(global-set-key (kbd ";") 'global-insert-comment)
-
-(defun global-insert-title ()
-  (interactive)
-  (let ((title (read-string "Title ")))
-    (unless (bobp) (insert "\n"))
-    (insert (concat comment-start comment-start " =================================================================================\n"))
-    (insert (concat comment-start comment-start) " " title "\n")
-    (insert (concat comment-start comment-start " =================================================================================\n"))
-    ; (next-line)
-  );let
-);defun
-
-(global-set-key (kbd "C-;") 'global-insert-title)
-
-;; =================================================================================
-;; Loading Modes
-;; =================================================================================
+;; C-x in term-mode
+(add-hook 'term-mode-hook
+  (lambda ()
+    ;; Hack to set two escape chars.
+    (let (term-escape-char) (term-set-escape-char ?\C-x))
+    (let (term-escape-char) (term-set-escape-char ?\C-c))))
 
 (add-to-list 'auto-mode-alist '("\\.m\\'" . octave-mode))
 
 ;; Highlighting associated parentheses
 (show-paren-mode 1)
 
-;; Showing line-number
-(global-linum-mode 1)
+;; IDO mode (interactive find-file and buffer)
+(ido-mode 1)
+;(ido-everywhere 1)
 
 ;; Showing changes
-(global-highlight-changes-mode 1)
-(set-face-foreground 'highlight-changes "orange red")
-(set-face-foreground 'highlight-changes-delete "orange red")
-(global-highlight-changes-mode 0)
-(global-set-key (kbd "C-c") 'highlight-changes-mode)
+;(global-highlight-changes-mode 1)
+;(set-face-foreground 'highlight-changes "orange red")
+;(set-face-foreground 'highlight-changes-delete "orange red")
+;(global-highlight-changes-mode 0)
+;(global-set-key (kbd "C-c") 'highlight-changes-mode)
 
 ;; Allowing Outline
 (outline-minor-mode 1)
 
 ;; Outline-minor-mode key map
- (define-prefix-command 'cm-map nil "Outline")
- ;; HIDE
- (define-key cm-map "q" 'hide-sublevels)    ; Hide everything but the top-level headings
- (define-key cm-map "t" 'hide-body)         ; Hide everything but headings (all body lines)
- (define-key cm-map "o" 'hide-other)        ; Hide other branches
- (define-key cm-map "c" 'hide-entry)        ; Hide this entry's body
- (define-key cm-map "l" 'hide-leaves)       ; Hide body lines in this entry and sub-entries
- (define-key cm-map "d" 'hide-subtree)      ; Hide everything in this entry and sub-entries
- ;; SHOW
- (define-key cm-map "a" 'show-all)          ; Show (expand) everything
- (define-key cm-map "e" 'show-entry)        ; Show this heading's body
- (define-key cm-map "i" 'show-children)     ; Show this heading's immediate child sub-headings
- (define-key cm-map "k" 'show-branches)     ; Show all sub-headings under this heading
- (define-key cm-map "s" 'show-subtree)      ; Show (expand) everything in this heading & below
- ;; MOVE
- (define-key cm-map "u" 'outline-up-heading)                ; Up
- (define-key cm-map "n" 'outline-next-visible-heading)      ; Next
- (define-key cm-map "p" 'outline-previous-visible-heading)  ; Previous
- (define-key cm-map "f" 'outline-forward-same-level)        ; Forward - same level
- (define-key cm-map "b" 'outline-backward-same-level)       ; Backward - same level
- (global-set-key "\M-o" cm-map)
+(define-prefix-command 'cm-map nil "Outline")
+
+;; HIDE
+(define-key cm-map "q" 'outline-hide-sublevels)           ; Hide everything but the top-level headings
+(define-key cm-map "t" 'outline-hide-body)                ; Hide everything but headings (all body lines)
+(define-key cm-map "o" 'outline-hide-other)               ; Hide other branches
+(define-key cm-map "c" 'outline-hide-entry)               ; Hide this entry's body
+(define-key cm-map "l" 'outline-hide-leaves)              ; Hide body lines in this entry and sub-entries
+(define-key cm-map "d" 'outline-hide-subtree)             ; Hide everything in this entry and sub-entries
+
+;; SHOW
+(define-key cm-map "a" 'outline-show-all)                 ; Show (expand) everything
+(define-key cm-map "e" 'outline-show-entry)               ; Show this heading's body
+(define-key cm-map "i" 'outline-show-children)            ; Show this heading's immediate child sub-headings
+(define-key cm-map "k" 'outline-show-branches)            ; Show all sub-headings under this heading
+(define-key cm-map "s" 'outline-show-subtree)             ; Show (expand) everything in this heading & below
+
+;; MOVE
+(define-key cm-map "u" 'outline-up-heading)               ; Up
+(define-key cm-map "n" 'outline-next-visible-heading)     ; Next
+(define-key cm-map "p" 'outline-previous-visible-heading) ; Previous
+(define-key cm-map "f" 'outline-forward-same-level)       ; Forward - same level
+(define-key cm-map "b" 'outline-backward-same-level)      ; Backward - same level
+
+(global-set-key "\M-o" cm-map)
+
+;; Map for smerge
+(setq smerge-mode-map
+  (let ((keymap (make-keymap)) pair key callback)
+    (dolist (pair '(
+          ("n" smerge-next)
+          ("u" smerge-keep-upper)
+          ("l" smerge-keep-lower)
+          )) (setq key (pop pair)) (setq callback (pop pair)) (define-key keymap (eval `(kbd ,key)) callback))
+    ;; Returns the keymap
+    keymap))
+
+
+;; =============================================================================================================
+;; Resize Emacs properly
+;; =============================================================================================================
+;; Ignored as emacs setup is saving desktop between sessions
+;(when (boundp 'frame-resize-pixelwise)
+;  (setq-default frame-resize-pixelwise t)
+;  (set-frame-size (selected-frame) 1875 925 t)
+;  (set-frame-position (selected-frame) 1920 31))
+
+
+;; Open clicked help in *Help* buffer window
+;; Not done yet
+
