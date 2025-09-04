@@ -1,19 +1,28 @@
-;; Loading recursively all files from the current directory
+;; ===============================================================================================================
+;; Load recursively all files from .emacs.d directory
+;;
+;; A. Buchet - September 2024
+;; ===============================================================================================================
 
-(let* ((emacs-settings-root "~/.emacs.d")
-       (l-files (cons (concat emacs-settings-root "/user") nil))
-       t-file
-       );def
-  (while (setq t-file (pop l-files))
-    ;; adding contained files to list if filename is a directory
-    (when (and (not (equal "." t-file))
-	       (not (equal ".." t-file))
-	       (file-directory-p t-file)
-	       )
-      (setq l-files (append l-files (directory-files t-file t "[^~.]$")))
-      );when
-    (when (and (< 3 (length t-file))
-	       (equal (substring t-file -3) ".el")
-	       )
-      (load t-file)
-      )))
+;; Find recursively .el files in autoloaded directory
+;; (`ignore-errors' call to support older emacs versions as well)
+(let ( (files (or (ignore-errors (directory-files-recursively (expand-file-name "~/.emacs.d/autoloaded") ".el$" nil t t))
+                                 (directory-files-recursively (expand-file-name "~/.emacs.d/autoloaded") ".el$" nil)
+                  ))
+       )
+
+  (dolist (file files)
+
+    ;; Prevent reloading current file to avoid infinite loop
+    (let ( (current-file (or load-file-name "~/.emacs.d/load.el"))
+           )
+      (unless (equal (file-truename file)
+                     (file-truename current-file)
+                     )
+        (with-demoted-errors (format "Loading %s" file) (load file))
+        ));unless ;let
+    ));dolist ;let
+
+;; External project 'formatter' contains command to reshape SKILL to Lisp or C-style
+;(load (expand-file-name "~/projects/formatter/emacs-lisp/format.el"))
+
