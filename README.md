@@ -5,7 +5,7 @@ Author: Aurélien Buchet
 
 Create `~/.emcas.d` to load `~/.emacs.d/load.el`.
 ```sh
-test ! -d ~/.emacs.d && (cd ~ && git clone https://github.com/Da-Buche/.emacs.d .emacs.d && ln -s .emacs.d/.emacs . ;) || (>&2 echo "~/.emacs.d exists already! ; exit 1 ;)"
+test ! -d ~/.emacs.d && (cd ~ && git clone https://github.com/Da-Buche/.emacs.d .emacs.d && ln -s .emacs.d/.emacs . ;) || (>&2 echo "~/.emacs.d exists already!" ; exit 1 ;)
 ```
 
 ## References & Thanks
