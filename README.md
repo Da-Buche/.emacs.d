@@ -10,10 +10,10 @@ test ! -d ~/.emacs.d && (cd ~ && git clone https://github.com/Da-Buche/.emacs.d 
 
 ## References & Thanks
 
-http://github.com/ananthakumaran/typescript.el
-https://github.com/yoshiki/yaml-mode
-https://github.com/lukhas/buffer-move
-http://github.com/nonsequitur/smex
+http://github.com/ananthakumaran/typescript.el  
+https://github.com/yoshiki/yaml-mode  
+https://github.com/lukhas/buffer-move  
+http://github.com/nonsequitur/smex  
 
 ## License
 
