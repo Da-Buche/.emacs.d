@@ -1,0 +1,12 @@
+## Prevent private files from being pushed
+
+.emacs.desktop
+recentf
+ido.last
+smex-items
+*.lock
+
+.backup/
+auto-save-list/
+elpa/
+
