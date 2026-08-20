@@ -12,8 +12,6 @@
  '(auto-revert-interval 0.5)
  '(fill-column 85)
  '(js-indent-level 2)
- '(ns-alternate-modifier 'super)
- '(ns-command-modifier 'meta)
  '(package-selected-packages '(dockerfile-mode markdown-mode dash ##))
  '(python-indent-offset 2)
  '(sh-basic-offset 2)
