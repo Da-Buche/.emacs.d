@@ -364,7 +364,7 @@ succeeds return a non-nil value, move point and set match-data"
   "Load SKILL file located at PATH in Virtuoso"
   (interactive "fFile to load: ")
   (skill-message-eval-string
-   (format "(if (isCallable '@load) (@load \"%s\") (load \"%s\"))" path path)
+   (format "(load \"%s\")" path path)
    ))
 
 (defun skill-load-current-file nil
@@ -668,7 +668,13 @@ args: %S"
                  (funcall             1)
                  (apply               1)
                  (lsprintf            1)
+                 (printf              1)
+                 (info                1)
+                 (warn                1)
+                 (error               1)
+                 (assert              1)
 
+                 (fprintf             2)
                  (defglobalfun        2)
                  (defmethod           2)
                  (destructuringBind   2)
@@ -678,6 +684,11 @@ args: %S"
                  (nif                 2)
                  (aif                 2)
                  (wrap                2)
+                 (ipcBeginProcess     2)
+
+                 (@nif                2)
+                 (@if                 2)
+                 (@wrap               2)
 
                  (for    3)
                  (mapfor 3)
@@ -1005,7 +1016,7 @@ is the buffer position of the start of the containing expression."
   )
 
 ;; Opening SKILL/SKILL++ files in SKILL mode
-(add-to-list 'auto-mode-alist `(,(regexp-opt '(".il" ".ils" ".skill" ".scm" ".cdsinit" ".pp" ".dumb")) . skill-mode))
+(add-to-list 'auto-mode-alist `(,(regexp-opt '(".il" ".ils" ".scm" ".skill" ".cdsinit" ".pp" ".dumb")) . skill-mode))
 (add-to-list 'auto-mode-alist `(,(regexp-opt '(".loader" ".cdsinit" ".cdslocal" ".cdsperso" ".algo" ".brick")) . skill-mode))
 
 ;; -------------------------------------------------------
