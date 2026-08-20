@@ -28,8 +28,13 @@
 (autoload 'eldo-mode "~/.emacs.d/modes/eldo-mode.el" nil t)
 (add-to-list 'auto-mode-alist `(,(regexp-opt '(".bkp" ".cir" ".ckt")) . eldo-mode))
 
+;; Use shell-script mode for unusual extensions
+(add-to-list 'auto-mode-alist `(,(regexp-opt '(".setup" ".cshrc.user")) . shell-script-mode))
+
 ;; Remove window manager frame decoration
 (add-to-list 'default-frame-alist '(undecorated . t))
+
+(setq recentf-max-saved-items 10000)
 
 ;; Make sure emacs does not split frame by itself
 ;(set-frame-parameter nil 'unsplittable t)
