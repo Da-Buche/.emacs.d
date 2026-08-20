@@ -82,9 +82,9 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; Open specific files extensions with associated modes
-(dolist (pair '(("\\.myalias|mycsh|mytcsh|bash|csh|tcsh|ucdprod\\'" . shell-script-mode     )
-                ("\\.emacs\\'"                                      . lisp-interaction-mode )
-                ("\\.m\\'"                                          . octave-mode           )
+(dolist (pair `( (,(concat "\\." (regexp-opt '( "myalias" "mycsh" "mytcsh" "bash" "bashrc" "sh" "csh" "cshrc" "cshrc.user" )) "\\'") . shell-script-mode )
+                 ("\\.emacs\\'" . lisp-interaction-mode )
+                 ("\\.m\\'"     . octave-mode           )
                 ))
   (add-to-list 'auto-mode-alist pair))
 
@@ -95,7 +95,7 @@
 (setq-default explicit-shell-file-name "/bin/bash")
 (setq-default shell-file-name "/bin/bash")
 
-;; Always follow version controlled symbolic lonks
+;; Always follow version controlled symbolic links
 (setq-default vc-follow-symlinks t)
 
 

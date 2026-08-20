@@ -364,7 +364,7 @@ succeeds return a non-nil value, move point and set match-data"
   "Load SKILL file located at PATH in Virtuoso"
   (interactive "fFile to load: ")
   (skill-message-eval-string
-   (format "(if (isCallable '@load) (@load \"%s\") (load \"%s\"))" path path)
+   (format "(load \"%s\")" path path)
    ))
 
 (defun skill-load-current-file nil
@@ -668,6 +668,7 @@ args: %S"
                  (funcall             1)
                  (apply               1)
                  (lsprintf            1)
+                 (procedure           1)
 
                  (defglobalfun        2)
                  (defmethod           2)
@@ -678,6 +679,10 @@ args: %S"
                  (nif                 2)
                  (aif                 2)
                  (wrap                2)
+
+                 (@nif                2)
+                 (@if                 2)
+                 (@wrap               2)
 
                  (for    3)
                  (mapfor 3)

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+~/projects/skill_sharp/bin/tcp_client -l SKILL $*
+

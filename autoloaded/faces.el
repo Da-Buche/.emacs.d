@@ -37,7 +37,7 @@
 ;; Set smaller default face
 (if (equal (system-name) "Aureliens-MacBook-Pro.local")
     (set-frame-font-size 12)
-  (set-frame-font-size 10)
+  (set-frame-font-size 8)
   )
 
 ;; =================================================================================
