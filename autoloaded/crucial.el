@@ -278,6 +278,32 @@
 ;; Make sure emacs does not split horizontally
 (setq split-height-threshold nil)
 
+(defun skill-format ()
+  "Align columns in region"
+  (interactive)
+  (when (region-active-p)
+    (call-process-region (region-beginning) (region-end) "env" t t t
+      (format "SKILL_INTERPRETER=%s/bin/skill" (getenv "HOME"))
+      "CDS_INST_DIR=/cad/cadence/virtuoso/25.1.4.49"
+      (format "%s/projects/skill_sharp/bin/sharp" (getenv "HOME"))
+      "format"
+      )))
+
+(defun skill-format-c-style ()
+  "Align columns in region"
+  (interactive)
+  (when (region-active-p)
+    (call-process-region (region-beginning) (region-end) "env" t t t
+      (format "SKILL_INTERPRETER=%s/bin/skill" (getenv "HOME"))
+      "CDS_INST_DIR=/cad/cadence/virtuoso/25.1.4.49"
+      "SKILL_SHARP_FORMAT_STYLE=C"
+      (format "%s/projects/skill_sharp/bin/sharp" (getenv "HOME"))
+      "format"
+      )))
+
+
+
+
 ;; -------------------------------------------------------
 ;; Split window only twice
 ;; -------------------------------------------------------

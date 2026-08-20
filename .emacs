@@ -12,8 +12,6 @@
  '(auto-revert-interval 0.5)
  '(fill-column 85)
  '(js-indent-level 2)
- '(ns-alternate-modifier 'super)
- '(ns-command-modifier 'meta)
  '(package-selected-packages '(dockerfile-mode markdown-mode dash ##))
  '(python-indent-offset 2)
  '(sh-basic-offset 2)
@@ -37,6 +35,8 @@
 (setq desktop-restore-frames nil)
 ;; Remove window manager frame decoration
 ;(add-to-list 'default-frame-alist '(undecorated . t))
+
+(setq recentf-max-saved-items 10000)
 
 ;; Make sure emacs does not split frame by itself
 ;(set-frame-parameter nil 'unsplittable t)
