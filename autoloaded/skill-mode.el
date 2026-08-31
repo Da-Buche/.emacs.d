@@ -315,7 +315,8 @@ succeeds return a non-nil value, move point and set match-data"
                (setq line (substring line 1 -1))
                ))
            lines "\n"))
-    ;; Print resulting message
+    ;; Copy & print resulting message
+    (kill-new res)
     (message "%s" res)))
 
 (defun skill-get-region nil
