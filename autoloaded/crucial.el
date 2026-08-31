@@ -158,12 +158,17 @@
     (defun rotate-buffers (&rest args)
       "Switch left and right buffers"
       (interactive)
-      (if (ignore-errors (buf-move-right) t) (other-window 1) (buf-move-left)))
+      ;; Check if emacs occupies more or less than 75% of the screen width
+      (if (< 0.75 (/ (frame-pixel-width) 1.0 (display-pixel-width)))
+          ;; More than 75%, switch buffers and focus on left one
+          (if (ignore-errors (buf-move-right) t) (other-window 1) (buf-move-left))
+        ;; Less than 75%, switch buffers and focus on right one
+        (if (ignore-errors (buf-move-left) t) (other-window 1) (buf-move-right))
+        ))
 
     (global-set-key (kbd "C-<tab>") 'rotate-buffers)
 
     ))
-
 
 ;; -------------------------------------------------------
 ;; Kill current and other buffers
