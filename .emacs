@@ -31,8 +31,10 @@
 ;; Use shell-script mode for unusual extensions
 (add-to-list 'auto-mode-alist `(,(regexp-opt '(".setup" ".cshrc.user")) . shell-script-mode))
 
+;; Gnome VDI bugs with undecorated windows and when restoring frames
+(setq desktop-restore-frames nil)
 ;; Remove window manager frame decoration
-(add-to-list 'default-frame-alist '(undecorated . t))
+;(add-to-list 'default-frame-alist '(undecorated . t))
 
 (setq recentf-max-saved-items 10000)
 

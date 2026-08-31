@@ -668,6 +668,7 @@ args: %S"
                  (funcall             1)
                  (apply               1)
                  (lsprintf            1)
+                 (procedure           1)
                  (printf              1)
                  (info                1)
                  (warn                1)
@@ -685,6 +686,10 @@ args: %S"
                  (aif                 2)
                  (wrap                2)
                  (ipcBeginProcess     2)
+
+                 (@nif                2)
+                 (@if                 2)
+                 (@wrap               2)
 
                  (@nif                2)
                  (@if                 2)
