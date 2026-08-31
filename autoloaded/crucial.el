@@ -44,10 +44,12 @@
   (setq make-backup-files nil)
   )
 
+(make-directory "~/.emacs.d/.locks/" t)
+(setq lock-file-name-transforms '((".*" "~/.emacs.d/.locks/" t)))
+
 ;; Use flashing mode line instead of visual bell
 (setq visible-bell       nil)
 (setq ring-bell-function (lambda () (invert-face 'mode-line) (run-with-timer 0.1 nil #'invert-face 'mode-line)))
-
 
 ;; ===================================================================
 ;; Miscellaneous
