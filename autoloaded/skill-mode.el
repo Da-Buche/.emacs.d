@@ -212,6 +212,25 @@ or elsewhere, return a 1-line docstring."
       )
      )))
 
+;; Open Cadence SKILL documentation
+(defun skill-describe-function (function)
+  "Display the full documentation of FUNCTION (a symbol)."
+  (interactive (list (read-string "SKILL Function: " (format "%s" (function-called-at-point)))))
+  (assert (not (string-empty-p function)) nil "Please provide a function name")
+  ;; Find documentation file describing FUNCTION
+  (let ( ( result (shell-command-to-string
+                   (format "find \"$CDS_INST_DIR/doc\" -maxdepth 2 -name '*.tgf' -exec grep -m1 '^%s\\b' {} \\; -quit | awk '{print $2}'" function)) )
+         )
+    (if (string-empty-p result)
+        (message "No match found for '%s'" function)
+      ;; Try to open found result using `eww`
+      (setq result (replace-regexp-in-string "\\$" "$CDS_INST_DIR/doc/" (string-trim result)))
+      (setq result (string-trim (shell-command-to-string (format "realpath %s" result))))
+      (if (file-exists-p result) (eww-open-file result)
+        (message "Not readable: %s" result)
+        ))
+    ))
+
 ;; =======================================================
 ;; Font Lock Support
 ;; =======================================================
@@ -960,6 +979,7 @@ is the buffer position of the start of the containing expression."
                     ("M-z"     skill-eval-command            "Send skill command"            )
                     ("C-x C-z" skill-register-command        "Register command"              )
                     ("C-z"     skill-eval-registered-command "Send registered command"       )
+                    ("C-h f"   skill-describe-function       "Describe a function"           )
                     ;; Inserts a closed parentheses or fetched the function
                     ;; associated to the paired parenthese with '\)'
                                         ;("C-M-\)" skill-close-parentheses)
