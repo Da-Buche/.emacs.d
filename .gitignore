@@ -7,6 +7,7 @@ smex-items
 *.lock
 
 .backup/
+cache/
 auto-save-list/
 elpa/
 

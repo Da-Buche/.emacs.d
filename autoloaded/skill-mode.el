@@ -212,10 +212,23 @@ or elsewhere, return a 1-line docstring."
       )
      )))
 
+(defun skill-function-called-at-point ()
+  "Return the function called in current S-expression."
+  (save-excursion
+    (save-restriction
+      (let ( ( forward-sexp-function nil ) ;Use elisp-mode's value
+             )
+        (narrow-to-region (max (point-min) (- (point) 1000)) (point-max))
+        ;; Move up to surrounding paren, then after the open.
+        (backward-up-list 1)
+        (forward-char 1)
+        (format "%s" (let ((obj (read (current-buffer)))) (and (symbolp obj) obj)))
+        ))))
+
 ;; Open Cadence SKILL documentation
 (defun skill-describe-function (function)
   "Display the full documentation of FUNCTION (a symbol)."
-  (interactive (list (read-string "SKILL Function: " (format "%s" (function-called-at-point)))))
+  (interactive (list (read-string "SKILL Function: " (or (ignore-errors (skill-function-called-at-point)) ""))))
   (assert (not (string-empty-p function)) nil "Please provide a function name")
   ;; Find documentation file describing FUNCTION
   (let ( ( result (shell-command-to-string
