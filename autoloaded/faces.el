@@ -35,10 +35,13 @@
     ))
 
 ;; Set smaller default face
-(if (equal (system-name) "Aureliens-MacBook-Pro.local")
-    (set-frame-font-size 12)
-  (set-frame-font-size 8)
-  )
+(cond
+  ;; Ultra-wide screen
+ ( (eq 3440 (display-pixel-width)) (set-frame-font-size 10) )
+ ;; Macbook pro 16"
+ ( (eq 1728 (display-pixel-width)) (set-frame-font-size 11) )
+ ( t                               (set-frame-font-size  8) )
+ )
 
 ;; =================================================================================
 ;; Defining User Faces
