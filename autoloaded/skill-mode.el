@@ -248,6 +248,8 @@ or elsewhere, return a 1-line docstring."
       ;; Try to open found result using `eww`
       (setq result (replace-regexp-in-string "\\$" "$CDS_INST_DIR/doc/" (string-trim result)))
       (setq result (string-trim (shell-command-to-string (format "realpath %s" result))))
+      ;; Disable colors in `eww`
+      (setq shr-use-colors nil)
       (if (file-exists-p result) (eww-open-file result)
         (message "Not readable: %s" result)
         ))
