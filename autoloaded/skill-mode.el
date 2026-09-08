@@ -228,12 +228,21 @@ or elsewhere, return a 1-line docstring."
 ;; Open Cadence SKILL documentation
 (defun skill-describe-function (function)
   "Display the full documentation of FUNCTION (a symbol)."
-  (interactive (list (read-string "SKILL Function: " (or (ignore-errors (skill-function-called-at-point)) ""))))
+  (interactive
+   (list
+     (letf ( (completion-ignore-case t) )
+       (completing-read "SKILL Function: "
+         (mapcar #'identity (hash-table-keys skill-eldoc-functions-table))
+         nil nil (or (ignore-errors (skill-function-called-at-point)) "")
+         ))))
+  ;(interactive (list (read-string "SKILL Function: " (or (ignore-errors (skill-function-called-at-point)) ""))))
   (assert (not (string-empty-p function)) nil "Please provide a function name")
   ;; Find documentation file describing FUNCTION
   (let ( ( result (shell-command-to-string
                    (format "find \"$CDS_INST_DIR/doc\" -maxdepth 2 -name '*.tgf' -exec grep -m1 '^%s\\b' {} \\; -quit | awk '{print $2}'" function)) )
          )
+    ;; Check find errors
+    (assert (not (string-prefix-p "find:" result)) t result)
     (if (string-empty-p result)
         (message "No match found for '%s'" function)
       ;; Try to open found result using `eww`
