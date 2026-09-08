@@ -1,4 +1,10 @@
 #!/bin/sh
 
-~/projects/skill_sharp/bin/tcp_client -l SKILL $*
+case "$(uname -s | tr '[:upper:]' '[:lower:]')" in
+  darwin)
+    exec podman exec -i rocky8-x11 ~/projects/skill_sharp/bin/tcp_client -l SKILL $*
+    ;;
+  *)
+    ~/projects/skill_sharp/bin/tcp_client -l SKILL $*
+esac
 
