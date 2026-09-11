@@ -158,15 +158,28 @@
     (load-file file)
 
     (defun rotate-buffers (&rest args)
-      "Switch left and right buffers"
+      "Switch left and right buffers.
+When 3 windows exist, swap only the two leftmost and leave cursor in the middle one."
       (interactive)
-      ;; Check if emacs occupies more or less than 75% of the screen width
-      (if (< 0.75 (/ (frame-pixel-width) 1.0 (display-pixel-width)))
-          ;; More than 75%, switch buffers and focus on left one
-          (if (ignore-errors (buf-move-right) t) (other-window 1) (buf-move-left))
-        ;; Less than 75%, switch buffers and focus on right one
-        (if (ignore-errors (buf-move-left) t) (other-window 1) (buf-move-right))
-        ))
+      (if (= 3 (length (window-list)))
+          (let* ((ws (sort (window-list) (lambda (a b) (< (car (window-edges a)) (car (window-edges b))))))
+                 (w1 (nth 0 ws))
+                 (w2 (nth 1 ws))
+                 (w3 (nth 2 ws)))
+            (if (eq (selected-window) w3)
+                (select-window w2)
+              (let ((b1 (window-buffer w1))
+                    (b2 (window-buffer w2)))
+                (set-window-buffer w1 b2)
+                (set-window-buffer w2 b1)
+                (select-window w2))))
+        ;; Check if emacs occupies more or less than 75% of the screen width
+        (if (< 0.75 (/ (frame-pixel-width) 1.0 (display-pixel-width)))
+            ;; More than 75%, switch buffers and focus on left one
+            (if (ignore-errors (buf-move-right) t) (other-window 1) (buf-move-left))
+          ;; Less than 75%, switch buffers and focus on right one
+          (if (ignore-errors (buf-move-left) t) (other-window 1) (buf-move-right))
+          )))
 
     (global-set-key (kbd "C-<tab>") 'rotate-buffers)
 
@@ -329,4 +342,22 @@
 
 (advice-add 'window-splittable-p :before-while #'do-not-split-more-than-two-windows)
 
+;; -------------------------------------------------------
+;; With 3 windows, other-window cycles only left and middle
+;; -------------------------------------------------------
+
+(defun other-window-skip-rightmost (orig-fn count &rest args)
+  "When exactly 3 windows exist, restrict other-window to the two leftmost."
+  (if (/= 3 (length (window-list)))
+      (apply orig-fn count args)
+    (let* ((ws (sort (window-list)
+                     (lambda (a b) (< (car (window-edges a))
+                                      (car (window-edges b))))))
+           (w1 (nth 0 ws))
+           (w2 (nth 1 ws)))
+      (if (eq (selected-window) w1)
+          (select-window w2)
+        (select-window w1)))))
+
+(advice-add 'other-window :around #'other-window-skip-rightmost)
 

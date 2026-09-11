@@ -63,6 +63,17 @@
   (find-file new-name))
 
 ;; -------------------------------------------------------
+;; Copy current file name to kill ring
+;; -------------------------------------------------------
+(defun copy-current-file-name nil
+  "Copy the current buffer's file name to the kill ring."
+  (interactive)
+  (let ((file-name (buffer-file-name)))
+    (if (not file-name) (message "Buffer '%s' is not visiting a file!" (buffer-name))
+      (kill-new file-name)
+      (message "%s" file-name))))
+
+;; -------------------------------------------------------
 ;; Load current file
 ;; -------------------------------------------------------
 (defun load-current-file nil
