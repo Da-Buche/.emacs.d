@@ -53,3 +53,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(unless (getenv "CDS_INST_DIR")
+  (setenv "CDS_INST_DIR" (concat (getenv "HOME") "/cad/cadence/virtuoso/25.1.4.49")))
